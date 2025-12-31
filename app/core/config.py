@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     DATABASE_POOL_MAX: int = 20
     DATABASE_TIMEOUT: int = 30
 
+    @property
+    def database_url_async(self) -> str:
+        """Get database URL with asyncpg driver if not already present."""
+        if self.DATABASE_URL.startswith("postgresql://"):
+            return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return self.DATABASE_URL
+
     # JWT Security
     SECRET_KEY: str
     ALGORITHM: str = "HS256"

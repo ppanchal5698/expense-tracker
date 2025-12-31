@@ -6,29 +6,20 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
-# Import settings to get database URL
 import sys
 from pathlib import Path
 
-# Add parent directory to path to import app
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.core.config import settings
 
-# this is the Alembic Config object
 config = context.config
+config.set_main_option("sqlalchemy.url", settings.database_url_async)
 
-# Set the database URL from settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
-
-# Interpret the config file for Python logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Add your model's MetaData object here for 'autogenerate' support
-# from app.database.models import Base
-# target_metadata = Base.metadata
-target_metadata = None  # Will be set in Sprint 1 when models are created
+target_metadata = None
 
 
 def run_migrations_offline() -> None:
@@ -56,7 +47,7 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode with async engine."""
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+    configuration["sqlalchemy.url"] = settings.database_url_async
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",

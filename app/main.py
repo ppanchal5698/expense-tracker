@@ -10,11 +10,11 @@ from app.core.config import settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown events."""
-    # Startup
     print("App starting...")
     yield
-    # Shutdown
     print("App shutting down...")
+    from app.database.connection import engine
+    await engine.dispose()
 
 
 app = FastAPI(
@@ -24,7 +24,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -48,6 +47,21 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.get("/health/db")
+async def health_check_db():
+    """Database connectivity check endpoint."""
+    from sqlalchemy import text
+    from app.database.connection import async_session
+
+    try:
+        async with async_session() as session:
+            result = await session.execute(text("SELECT 1"))
+            result.scalar()
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
 
 
 if __name__ == "__main__":
